@@ -22,14 +22,48 @@ public class GraphManager : MonoBehaviour
     void Start()
     {
         //Si wayPoints tiene nodos definidos (prevenir estructura vacia)
+        if (waypoints == null || waypoints.Length == 0)
+        {
+            Debug.LogError("GraphManager: no hay Waypoints asignados.", this);
+            return;
+        }
         //if (...) {
-            //Iteramos para cada WP y lo guardamos en la estructura graph
+        //Iteramos para cada WP y lo guardamos en la estructura graph
+        foreach (GameObject wp in waypoints)
+        {
+            if (wp != null)
+            {
+                graph.AddNode(wp);
+            }
+            else
+            {
+                Debug.LogWarning("GraphManager: hay un Waypoint sin asignar.", this);
+            }
+        }
 
-            //Iteramos para cada link y lo guardamos en la estructura graph
 
-        //}
+        //Iteramos para cada link y lo guardamos en la estructura graph
+        if (links != null)
+        {
+            foreach (Link link in links)
+            {
+                if (link.node1 == null || link.node2 == null)
+                {
+                    Debug.LogWarning("GraphManager: hay una conexión incompleta.", this);
+                    continue;
+                }
+
+                // Dirección de node1 hacia node2.
+                graph.AddEdge(link.node1, link.node2);
+
+                // Si es bidireccional, añadir también la vuelta.
+                if (link.dir == Link.direction.BI)
+                {
+                    graph.AddEdge(link.node2, link.node1);
+                }
+            }
+        }
     }
-
     // Update is called once per frame
     void Update()
     {

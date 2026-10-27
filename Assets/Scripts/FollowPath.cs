@@ -14,19 +14,112 @@ public class FollowPath : MonoBehaviour
     int currentWP = 0;           //Indice a lo largo del camino que seguimos, no tiene que ver con el numero/posicion de cada WP
     Graph g;                     //Grafo
 
+    public GameObject heliWaypoint;
+    public GameObject ruinWaypoint;
+    private bool pathActive = false;
+
     // Start is called before the first frame update
     void Start()
     {
         //Inicializar wps, g y currentNode
+        if (wpManager == null)
+        {
+            Debug.LogError("FollowPath: asigna el GraphManager.", this);
+            enabled = false;
+            return;
+        }
+
+        GraphManager manager = wpManager.GetComponent<GraphManager>();
+
+        if (manager == null)
+        {
+            Debug.LogError("FollowPath: el objeto asignado no tiene GraphManager.", this);
+            enabled = false;
+            return;
+        }
+
+        g = manager.graph;
+        wps = manager.waypoints;
+
+        currentNode = FindClosestWaypoint();
+
+        if (currentNode == null)
+        {
+            Debug.LogError("FollowPath: no se encuentran Waypoints validos.", this);
+            enabled = false;
+        }
+    }
+
+    GameObject FindClosestWaypoint()
+    {
+        if (wps == null || wps.Length == 0)
+            return null;
+
+        GameObject closest = null;
+        float minDistance = Mathf.Infinity;
+
+        foreach (GameObject wp in wps)
+        {
+            if (wp == null)
+                continue;
+
+            float distance = Vector3.Distance(
+                transform.position, wp.transform.position);
+
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closest = wp;
+            }
+        }
+
+        return closest;
     }
 
     public void GoToHeli()
     {
+        GoToDestination(heliWaypoint);
     }
 
     public void GoToRuin()
     {
+        GoToDestination(ruinWaypoint);
     }
+
+    void GoToDestination(GameObject destination)
+    {
+        if (destination == null)
+        {
+            Debug.LogError(
+                "FollowPath: asigna el Waypoint de destino en el Inspector.",
+                this);
+            return;
+        }
+
+        currentNode = FindClosestWaypoint();
+
+        if (currentNode == null)
+            return;
+
+        bool found = g.AStar(currentNode, destination);
+
+        if (!found)
+        {
+            pathActive = false;
+            Debug.LogWarning(
+                "No existe una ruta hasta " + destination.name +
+                ". Comprueba las conexiones del grafo.");
+            return;
+        }
+
+        currentWP = 0;
+        pathActive = true;
+
+        g.printPath();
+    }
+    
+
+
 
     // Update is called once per frame
     void LateUpdate()
@@ -38,16 +131,79 @@ public class FollowPath : MonoBehaviour
         //Si estamos suficientemente cerca al nodo currentWP, pasamos a buscar el siguiente
 
         //Si aun no hemos llegado al final del camino, nos dirigimos al siguiente nodo
-		//if (...) {
-			//Guardamos en goal el nuevo nodo a visitar
+        //if (...) {
+        //Guardamos en goal el nuevo nodo a visitar
 
-			//Miramos hacia nuestro destino (goal)
+        //Miramos hacia nuestro destino (goal)
 
-            //Movemos el tanque
+        //Movemos el tanque
 
         //}
+        if (g == null || !pathActive)
+            return;
 
-        g.debugDraw();
+        int pathLength = g.getPathLength();
+
+        if (pathLength == 0 || currentWP >= pathLength)
+        {
+            pathActive = false;
+            return;
+        }
+
+        // Obtener el siguiente punto de la ruta.
+        GameObject nextPoint = g.getPathPoint(currentWP);
+
+        if (nextPoint == null)
+        {
+            pathActive = false;
+            return;
+        }
+
+        Vector3 target = nextPoint.transform.position;
+
+        // Comprobar si hemos llegado al punto actual.
+        if (Vector3.Distance(transform.position, target) <= accuracy)
+        {
+            currentWP++;
+
+            if (currentWP >= pathLength)
+            {
+                pathActive = false;
+                return;
+            }
+
+            nextPoint = g.getPathPoint(currentWP);
+
+            if (nextPoint == null)
+            {
+                pathActive = false;
+                return;
+            }
+
+            target = nextPoint.transform.position;
+        }
+
+        // Orientar el tanque hacia el siguiente punto.
+        Vector3 direction = target - transform.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                rotSpeed * Time.deltaTime);
+        }
+
+        // Mover el tanque hacia el punto de la ruta.
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            target,
+            speed * Time.deltaTime);
+    
+         g.debugDraw();
 
     }
 }
