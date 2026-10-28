@@ -17,6 +17,7 @@ public class GraphManager : MonoBehaviour
     public GameObject[] waypoints;    //Array de waypoints
     public Link[] links;              //Array de links
     public Graph graph = new Graph(); //Codigo para el grafo esta ya creado en la carpeta "Graphs"
+ 
 
     // Start is called before the first frame update
     void Start()
@@ -31,14 +32,13 @@ public class GraphManager : MonoBehaviour
         //Iteramos para cada WP y lo guardamos en la estructura graph
         foreach (GameObject wp in waypoints)
         {
+           
+            
             if (wp != null)
             {
                 graph.AddNode(wp);
             }
-            else
-            {
-                Debug.LogWarning("GraphManager: hay un Waypoint sin asignar.", this);
-            }
+           
         }
 
 
@@ -67,6 +67,7 @@ public class GraphManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+       
         graph.debugDraw();
     }
 }

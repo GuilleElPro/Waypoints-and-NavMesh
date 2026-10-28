@@ -17,7 +17,14 @@ public class NavMeshManager : MonoBehaviour
             Debug.LogError("No se ha encontrado un NavMeshAgent en el Player.");
         }
     }
-
+    public void ControlAgent(bool isEnabled)
+    {
+        if (agent != null)
+        {
+            agent.enabled = isEnabled;
+        }
+      
+    }
     public void SetHeli()
     {
         Debug.Log("No se ha encontrado un NavMeshAgent en el Player.");

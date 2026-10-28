@@ -18,6 +18,8 @@ public class FollowPath : MonoBehaviour
     public GameObject ruinWaypoint;
     private bool pathActive = false;
 
+    public bool isNavMesh = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -89,11 +91,9 @@ public class FollowPath : MonoBehaviour
 
     void GoToDestination(GameObject destination)
     {
-        if (destination == null)
+        if (destination == null )
         {
-            Debug.LogError(
-                "FollowPath: asigna el Waypoint de destino en el Inspector.",
-                this);
+          
             return;
         }
 
@@ -140,6 +140,11 @@ public class FollowPath : MonoBehaviour
         //Movemos el tanque
 
         //}
+        if (isNavMesh)
+        {
+            pathActive = false;
+            return;
+        }
         if (g == null || !pathActive)
             return;
 
