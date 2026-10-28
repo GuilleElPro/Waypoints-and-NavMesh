@@ -78,6 +78,7 @@ public class FollowPath : MonoBehaviour
 
     public void GoToHeli()
     {
+        
         GoToDestination(heliWaypoint);
     }
 
@@ -98,7 +99,7 @@ public class FollowPath : MonoBehaviour
 
         currentNode = FindClosestWaypoint();
 
-        if (currentNode == null)
+        if (currentNode == null || currentNode == destination)
             return;
 
         bool found = g.AStar(currentNode, destination);
